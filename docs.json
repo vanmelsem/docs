@@ -1,12 +1,17 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
+
   "name": "Fizyr Documentation",
   "colors": {
     "primary": "#0BA9BC",
     "light": "#0BA9BC",
     "dark": "#0BA9BC"
   },
+  "appearance": {
+    "default": "dark"
+  },
+
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
