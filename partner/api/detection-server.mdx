@@ -1,0 +1,27 @@
+---
+title: "Detection Server"
+---
+
+To set the active neural network, it is essential to define the model path accurately within your configuration file. This path points to the pre-trained model weights stored on your system, such as `model_path: /etc/fizyr/weights/general_binpick_1.0.0.pt`. Properly configuring this path ensures that the system utilizes the correct network model for its tasks, enabling consistent and reliable performance based on the designated neural network's architecture and training.
+
+```
+model_path: /etc/fizyr/weights/general_binpick_1.0.0.pt
+```
+
+When configuring a neural network, setting an appropriate confidence threshold is crucial for determining which detections are retained and which are discarded. The `score_threshold` parameter allows you to specify this minimum confidence level. For instance, setting `score_threshold: 0.75` ensures that only detections with a confidence score of 75% or higher will be considered valid. This helps in eliminating less certain detections, thereby improving the precision of the network's output by filtering out potential false positives.
+
+```
+  score_threshold: 0.75
+```
+
+To specify which GPU the neural network should utilize, you can configure the `gpu` setting in the configuration file. Setting `gpu` to a value between `0..n` designates the specific GPU by its index number, where `0` usually refers to the first GPU available. Conversely, setting `gpu` to `-1` directs the system to use the CPU instead. This flexibility allows you to optimize computing resources based on the availability and performance characteristics of your hardware.
+
+```
+  gpu: 0
+```
+
+Setting a neural network to use half precision can significantly reduce the model's memory footprint, enabling more efficient use of storage and computational resources. By setting `half_precision: false`, as indicated in the configuration, you are choosing not to utilize half precision, which means the network will operate at full precision. This can be beneficial for maintaining high accuracy at the cost of increased storage and memory usage. Adjusting this setting based on your specific requirements can help balance the trade-offs between performance and resource optimization.
+
+```
+  half_precision: false
+```

@@ -101,3 +101,390 @@ The detections can be sent to the client in three different ways:
 | This body is empty | | | |
 | **Total size:** 0 bytes | | | |
 ```
+
+```markdown Response Body
+| Field                    | Type            | Size     | Description                                    |
+| ------------------------ | --------------- | -------- | ---------------------------------------------- |
+| detections               | List(Detection) | variable | List of detected objects with their pick poses |
+| **Total size:** variable |                 |          |                                                |
+```
+
+</CodeGroup>
+
+#### Update Messages
+
+The following update messages may be sent during processing:
+
+<CodeGroup>
+```markdown detection
+| Field | Type | Size | Description |
+| --- | --- | --- | --- |
+| detection | Detection | variable | A single detection with pick poses |
+| **Total size:** variable | | | |
+```
+
+```markdown detections
+| Field                    | Type            | Size     | Description                            |
+| ------------------------ | --------------- | -------- | -------------------------------------- |
+| detections               | List(Detection) | variable | List of all detections with pick poses |
+| **Total size:** variable |                 |          |                                        |
+```
+
+</CodeGroup>
+
+### 3.3. Service `record-compute-pick-roi` (ID: 4)
+
+May be sent by: client
+
+This service triggers the 3D camera to record an image with Region of Interest (ROI) processing to find objects with pick poses. It functions similarly to `record-compute-pick` but with additional ROI processing capabilities.
+
+<CodeGroup>
+```markdown Request Body
+| Field | Type | Size | Description |
+| --- | --- | --- | --- |
+| roi_points | List(Point2D) | variable | List of 2D points defining the ROI polygon |
+| **Total size:** variable | | | |
+```
+
+```markdown Response Body
+| Field                    | Type            | Size     | Description                                                   |
+| ------------------------ | --------------- | -------- | ------------------------------------------------------------- |
+| detections               | List(Detection) | variable | List of detected objects with their pick poses within the ROI |
+| **Total size:** variable |                 |          |                                                               |
+```
+
+</CodeGroup>
+
+## 4. Server Configuration
+
+The pick server can be configured through various settings that control its behavior. Below are the key configuration areas:
+
+### 4.1. General Settings
+
+The following general settings control basic server behavior:
+
+- `max_grasp_infos`: Maximum number of grasp poses to calculate per object (default: 1)
+- `report_unpickable_detections`: Whether to report objects without valid grasp poses (default: false)
+- `flip_poses`: Whether grasp poses should point away from the object (default: false)
+
+### 4.2. Detection Filters
+
+Detection filters can be configured to remove unwanted detections based on various criteria:
+
+The filters are applied at the following location in the command server configuration:
+
+```yaml
+modules:
+  - pick:
+      pipeline:
+        detections_filter: <filter-configs>
+```
+
+#### Border Filter
+
+The `border` filter removes detections based on their pixel coordinates in a 2D image. The parameters define margins that exclude detections within a specified number of pixels from each side of the image:
+
+```yaml
+border:
+  border_left: 0
+  border_right: 0
+  border_top: 0
+  border_bottom: 50
+```
+
+#### Layer Filter
+
+The `first_layer` filter keeps only the detections that lie within the topmost layer based on their relative distances from a reference plane. The `layer_filter_config` defines what is considered the top layer:
+
+- `max_layer_distance`: Defines which detections are considered to be within the top layer
+- `max_relative_distance`: Can include additional parcels whose height falls within configured margins relative to detections within max_layer_distance
+- `use_relative_distances`: Toggles the relative distance feature
+
+The `reference_plane` defines the direction of layering in robot coordinates using a point and normal vector:
+
+```yaml
+first_layer:
+  layer_filter_config:
+    max_layer_distance: 0.2
+    max_relative_distance: 0.06
+    use_relative_distances: true
+  reference_plane:
+    point: [0.0, 0.0, 0.0]
+    normal: [0, 0, 1.0]
+```
+
+#### Shape Filter
+
+The `shape_filter` modifies detections based on their shapes. The `mask_to_rotated_bbox_threshold` parameter defines the threshold to approximate the shape of a detection to a rotated bounding box:
+
+```yaml
+shape_filter:
+  mask_to_rotated_bbox_threshold: 0.6 # Threshold for shape approximation
+```
+
+### 4.3. Detection Prioritization
+
+The prioritization of detections after filtering is configured in the command server configuration file at the following location:
+
+```yaml
+modules:
+  - pick:
+      pipeline:
+        detection_prioritization: <prioritization-configs>
+```
+
+#### Prioritization Function
+
+The prioritization is defined as a weighted function based on the following metrics:
+
+- **normalized_distance_from_center_to_center**: Uses the distance between the center of the detected object and the center of the image
+- **objectness**: The score assigned by the detection network indicating its confidence that the detection is an object
+- **normalized_distance**: Represents a normalized measure of distance based on a user-defined plane
+- **normalized_size**: Reflects the size of the detected object normalized to all detections in the image
+- **normalized_distance_from_center_to_2d_reference**: Measures the distance from the object's center to a predefined 2D reference point
+- **normalized_distance_from_contour_to_2d_reference**: Measures the distance from the object's contour to a 2D reference point
+
+For example, to configure the system to prioritize picking the highest objects first, use the following weights:
+
+```yaml
+weights:
+  normalized_distance_from_center_to_center: 0
+  objectness: 0
+  normalized_distance: 1 # Only this weight is set to prioritize height
+  normalized_size: 0
+  normalized_distance_from_center_to_2d_reference: 0
+  normalized_distance_from_contour_to_2d_reference: 0
+```
+
+#### Reference Point Configuration
+
+The 2D reference point is defined in pixel coordinates of the image (x, y). This point is used when calculating distances for the reference-based metrics:
+
+```yaml
+reference_point_2d: [850, -100]
+```
+
+#### Distance Configuration
+
+The maximum distance defines the range for normalization. The normalized distance of the weighted function is calculated based on a 3D reference plane and its normal in the robot coordinate space:
+
+```yaml
+detections_prioritization:
+  distance:
+    max_distance: 4.0 # Maximum distance for normalization
+    reference_plane:
+      point: [0, 0, -2.0] # Point on the reference plane
+      normal: [0, 0, 1.0] # Normal vector of the plane
+```
+
+#### Occlusion Configuration
+
+You can implement different weights for objects that are determined to be non-occluded. This is useful when you want to prioritize picking exposed objects over partially occluded ones:
+
+```yaml
+occlusion:
+  prioritize_non_occluded: True # Enable special weights for non-occluded objects
+  occluded_threshold: 0.3 # Threshold to determine occlusion
+  occlusion_descriptor_name: occlusion
+  non_occluded_weights: # Weights applied to non-occluded objects
+    normalized_distance_from_center_to_center: 0
+    objectness: 0
+    normalized_distance: 0
+    normalized_size: 0
+    normalized_distance_from_center_to_2d_reference: 0
+    normalized_distance_from_contour_to_2d_reference: 1 # Prioritize by contour distance
+```
+
+### 4.4. Regions of Interest (ROI)
+
+ROIs can be defined as 2D polygons in image coordinates. These are used to limit detection to specific areas of the image.
+
+#### Configuring ROI
+
+To configure an ROI:
+
+1. Position the camera in its final position
+2. Take a test image using the `record-compute-pick` service
+3. Open the image in an image editing software:
+
+   <Frame caption="Opening image editing software">
+     <img
+       src="/images/open-gimp.png"
+       alt="Opening GIMP or similar image editing software"
+     />
+   </Frame>
+
+4. Navigate to the latest log:
+
+   - Select File System on the left side of the popup
+   - Open `srv/logs/pick/<base-log-folder>/record-compute-pick/<day>/<hour>/<log-folder>/<image.png>`
+
+5. Note the pixel coordinates for each corner point of your desired ROI:
+
+   <Frame caption="ROI Measurement">
+     <img
+       src="/images/roi-measurement.png"
+       alt="ROI measurement showing the (x,y) coordinates of the cursor"
+     />
+   </Frame>
+
+6. Record at least 3 points to define your ROI polygon:
+   <Frame caption="ROI Polygon Example">
+     <img
+       src="/images/roi-polygon.png"
+       alt="Example of an ROI polygon defined by four points"
+     />
+   </Frame>
+
+Example ROI configuration:
+
+```yaml
+regions_of_interest:
+  - [[x1, y1], [x2, y2], [x3, y3], [x4, y4]] # First ROI polygon
+  - [[0, 0], [1000, 0], [1000, 1000], [0, 1000]] # Example with actual coordinates
+```
+
+<Note>
+  ROIs are defined in the 2D camera frame where: - Origin (0,0) is at the
+  top-left corner - X increases to the right - Y increases downward
+</Note>
+
+### 4.5. Volumes of Interest (VOI)
+
+VOIs are 3D filters applied to the pointcloud that remove any points not within their configured boundaries. They are defined in the robot base frame coordinates and configured within the command server configuration file.
+
+A VOI is created by defining a base polygon that is extruded along the z-axis of the base frame from `min_z` to `max_z` to create a 3D volume:
+
+<Frame caption="VOI Configuration">
+  <img
+    src="/images/voi-configuration.png"
+    alt="VOI configuration showing how a base polygon is extruded to create a volume"
+  />
+</Frame>
+
+The base polygon requires at least 3 (x, y) coordinate pairs to define its shape. The configuration specifies both the polygon points and the height range:
+
+```yaml
+volumes:
+  - points: [[x1, y1], [x2, y2], [x3, y3]] # Base polygon points
+    min_z: 0.0 # Minimum height of the volume
+    max_z: 1.0 # Maximum height of the volume
+```
+
+Example VOI configuration:
+
+<Frame caption="Example VOI">
+  <img
+    src="/images/voi-example.png"
+    alt="Example of a VOI with a triangular base extruded vertically"
+    width="293"
+  />
+</Frame>
+
+<Note>
+  The coordinates are specified in meters and measured in the robot base frame.
+  Make sure to measure and specify the points accurately to ensure proper
+  filtering.
+</Note>
+
+### 4.6. Collision Walls
+
+Collision walls can be configured as either:
+
+- Dynamic walls (activated via client requests)
+- Fixed walls (always active)
+
+Walls are defined as planes in 3D by providing two corner points for one side of the wall, and one point on the opposite side:
+
+<Frame caption="Collision Wall Configuration">
+  <img
+    src="/images/collision-wall-config.png"
+    alt="Diagram showing how three points define a collision wall plane"
+  />
+</Frame>
+
+Configuration example:
+
+```yaml
+walls:
+  - points:
+      - [x1, y1, z1] # First corner
+      - [x2, y2, z2] # Second corner
+      - [x3, y3, z3] # Point on opposite side
+```
+
+<Note>Points are defined in the base-frame coordinates in meters.</Note>
+
+### 4.7. Container Detection
+
+Container detection can be configured with:
+
+- Detection regions of interest
+- Container layout specifications
+- Container dimensions and orientation
+
+#### Setting Up Container Detection
+
+To configure container detection:
+
+1. Position the camera in its final position
+2. Take a picture with the container in view using the `record-compute-pick` service
+3. Similar to ROI configuration, note down the pixel coordinates for the container detection regions
+
+#### Detection Regions
+
+Container detection regions can be defined to limit where containers are detected. These regions are specified as 2D polygons in image coordinates:
+
+```yaml
+container_detection_regions_of_interest:
+  - [[0, 0], [1000, 0], [1000, 1000], [0, 1000]] # First detection region
+  - [[0, 0], [0, 2000], [2000, 2000], [2000, 0]] # Second detection region
+```
+
+#### Container Configuration
+
+Containers are configured in the server configuration file with the following parameters:
+
+```yaml
+containers:
+  # First container configuration
+  - normal: [0, 0, 1] # Normal of the bottom plane pointing upwards
+    fixed_plane_point: [0, 0, 0.5] # Point on the fixed plane (top or bottom)
+    height: 0.25 # Distance between top and bottom planes
+    layout: [] # Definition for container layout check
+
+  # Second container configuration
+  - normal: [0, 0, 1] # Normal of the bottom plane pointing upwards
+    fixed_plane_point: [0.4, 0.2, 0.3] # Point on the fixed plane
+    fixed_plane_is_top_plane: false # Whether the fixed plane is the top plane
+    height: 0.20 # Container height
+    layout: [] # Layout check definition
+```
+
+<Note>
+  Container detection can be activated for specific containers using the
+  `SelectContainer` extension (ID: 8000) in the pick request. The container ID
+  must match the configuration file.
+</Note>
+
+## 5. Best Practices
+
+### 5.1. Pose Feedback
+
+Sending `pose_feedback` is highly recommended for production systems as it:
+
+- Helps analyze root causes of failed picks
+- Facilitates efficient data transfer by only sending failures
+- Enables selective logging in production environments
+
+### 5.2. ROI and VOI Usage
+
+- Use ROIs when you need to limit detection to specific areas in the 2D image
+- Use VOIs when you need to filter objects based on their 3D position
+- Combine both for precise control over detection areas
+
+### 5.3. Container Detection
+
+- Always verify container layout against configuration when critical
+- Use container detection ROIs to improve detection accuracy
+- Consider using dynamic collision walls for flexible container handling

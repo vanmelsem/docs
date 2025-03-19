@@ -14,26 +14,6 @@
 
   "favicon": "/favicon.svg",
   "navigation": {
-    "dropdowns": [
-      {
-        "dropdown": "Documentation",
-        "icon": "book-open",
-        "pages": ["quickstart", "development", "navigation"]
-      },
-      {
-        "dropdown": "API References",
-        "icon": "sqaure-terminal",
-        "pages": [
-          "api-reference/get",
-          "api-reference/post",
-          "api-reference/delete"
-        ]
-      },
-      {
-        "dropdown": "Blog",
-        "href": "https://external-link.com/blog"
-      }
-    ],
     "tabs": [
       {
         "tab": "Guides",
@@ -54,7 +34,6 @@
                 "group": "Documentation",
                 "icon": "files",
                 "pages": [
-                  "partner/documentation",
                   "partner/documentation/system-requirements",
                   "partner/documentation/system-overview",
                   "partner/documentation/camera-setup",
@@ -69,6 +48,7 @@
                   "partner/api/overview",
                   "partner/api/rpc-protocol",
                   "partner/api/pick-server",
+                  "partner/api/detection-server",
                   "partner/api/placement-verification-server",
                   "partner/api/supervisor",
                   {
