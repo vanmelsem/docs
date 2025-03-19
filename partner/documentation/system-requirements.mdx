@@ -1,0 +1,97 @@
+---
+title: "System Requirements"
+description: "Complete guide to hardware, remote access, and support requirements for Fizyr systems"
+---
+
+## Hardware Requirements
+
+### Vision PC Specifications
+
+| Component    | Details                                                                                                                                  |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Case         | Inter-Tech 48.3cm IPC 4U-4088-S 4HE SERVER                                                                                               |
+| Case Fans    | - 2 x Noiseblocker NB-Blacksilent Fan X1 Rev. 3.0 - 80mm<br/>- Noiseblocker NB-Blacksilent XL1 Rev.3 - 120mm                             |
+| Power Supply | PSU 850Watt Seasonic G12 GC-850 80+ Gold                                                                                                 |
+| CPU Cooler   | IBS CPU cooler lowprofile                                                                                                                |
+| Motherboard  | ASUS industrial Q670EA-IM-A ATX LGA1700 3x LAN                                                                                           |
+| CPU          | Intel Core i7 14700K, 20-core 28 threads, 3.4GHz (max turbo 5.6GHz), LGA1700, 33MB Cache                                                 |
+| GPU          | PNY NVIDIA RTX A5000, 8192 Cudacores, 256 Tensor Cores, 24GB GDDR6 with ECC                                                              |
+| RAM          | 2 x 16GB Crucial DDR5 4800 MHz (Total 32GB)                                                                                              |
+| Storage      | - Software Drive: 1TB Samsung M.2 PCIe NVMe Gen4 980 PRO (Read: 7000MB/s, Write: 5000MB/s)<br/>- Logging Drive: 2TB Samsung SATA 870 EVO |
+| Network      | - 10GB Network: Intel NIC PCIe X550-T2<br/>- PoE Network: Delock PCIe Card RJ45 2.5Gigabit LAN PoE+                                      |
+| UPS          | APC Smart-UPS 1000VA LCD RM 700Watt SMT1000RMI2UC                                                                                        |
+
+## Remote Access Requirements
+
+### Balena Connectivity
+
+Fizyr utilizes Balena for deployment, monitoring, and remote maintenance. This cloud solution enables:
+
+- Software updates and package deployment
+- Remote system monitoring
+- Configuration management
+- Log access and analysis
+
+#### Network Requirements
+
+The following ports must be accessible:
+
+| Port | Protocol | Purpose                  |
+| ---- | -------- | ------------------------ |
+| 53   | UDP      | DNS resolution           |
+| 123  | UDP      | NTP time synchronization |
+| 443  | TCP      | HTTPS connections        |
+
+**Required Domains:**
+
+- \*.balena-cloud.com
+
+#### Bandwidth Requirements
+
+- Update Size: 20-40 GB
+- Monthly Data Transfer: ~100-200 GB for logs and analysis
+- Backup Data: 1-2 GB per maintenance session
+
+### Remote Access Scenarios
+
+1. **Configuration**
+
+   - Duration: 1-2 hours
+   - Purpose: System setup and testing after updates/installation
+
+2. **Maintenance**
+
+   - Purpose: Regular data backup
+   - Data Volume: 1-2 GB
+
+3. **Inspection**
+
+   - Frequency: Monthly
+   - Data Volume: 100-200 GB
+   - Purpose: Log retrieval and analysis
+
+4. **Support & Monitoring**
+   - Duration: Variable based on issue
+   - Some contracts require continuous connectivity
+
+## Support Structure
+
+### Standard Support
+
+Fizyr provides third-line support by default, which includes:
+
+- Remote troubleshooting
+- System optimization
+- Software updates
+- Performance monitoring
+
+### Offline Support Options
+
+For environments with limited connectivity:
+
+- System updates via USB
+- Algorithm tuning
+- Neural network updates
+- Data backup management
+
+**Note:** Offline support requires physical access to the Fizyr PC with keyboard, mouse, and screen.

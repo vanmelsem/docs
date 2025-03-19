@@ -1,0 +1,57 @@
+---
+title: "API Overview"
+description: "Overview of Fizyr's Vision Software API Services"
+---
+
+## Available Services
+
+Fizyr's Vision Software consists of three main services:
+
+<Card title="Pick Server" icon="hand-back-fist">
+  The Pick Server handles object detection, grasp point calculation, and pick
+  operations. It provides services for: - Object detection in bins or on
+  conveyors - Optimal grasp point calculation - Pick success verification
+</Card>
+
+<Card title="Placement Verification Server" icon="magnifying-glass-location">
+  The Placement Verification Server ensures accurate object placement. It
+  offers: - Real-time placement verification - Region-of-interest monitoring -
+  Object count verification
+</Card>
+
+<Card title="Supervisor" icon="tower-control">
+  The Supervisor manages system-wide operations and monitoring: - Service health
+  monitoring - System status management - Service coordination
+</Card>
+
+## Communication Protocol
+
+All services use our standardized RPC protocol over TCP for communication. For detailed protocol specifications, see the [RPC Protocol](./rpc-protocol) documentation.
+
+<Info>
+  Each service implements its own specific interface on top of the base
+  protocol. Refer to individual service documentation for available operations
+  and data formats.
+</Info>
+
+## Getting Started
+
+To start using Fizyr's Vision Software API:
+
+1. Review the system requirements in our [documentation](../documentation/system-requirements)
+2. Set up your camera system following the [camera setup guide](../documentation/camera-setup)
+3. Configure your servers using the [server configuration](../documentation/server-configuration) instructions
+4. Implement your client application using our protocol and service specifications
+
+<Tip>
+  Check out our [examples](./plugins/examples) for implementation guidance and
+  best practices.
+</Tip>
+
+## Integration Support
+
+<Card title="Need Help?" icon="life-ring">
+  Our support team is ready to assist with your integration: - [Contact
+  Support](mailto:support@fizyr.com) - [Documentation](https://docs.fizyr.com) -
+  [Community](https://www.linkedin.com/company/fizyr/)
+</Card>

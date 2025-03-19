@@ -1,0 +1,372 @@
+---
+title: "Fanuc Integration"
+description: "Guide for developing Fizyr API plugins for Fanuc"
+---
+
+Fizyr to FANUC Integration Manual
+
+## Table of Contents
+
+1. [Setup and Calibration](#setup-and-calibration)
+2. [Pick Server](#pick-server)
+3. [Place Verification](#place-verification)
+4. [TPE Demo Programs](#tpe-demo-programs)
+5. [Prepare TPE Demo Programs](#prepare-tpe-demo-programs)
+6. [Set Up a Toolframe](#set-up-a-toolframe)
+7. [Teach the Home and Place Position](#teach-the-home-and-place-position)
+
+Before anything can be done, first the setup and calibration must be completed successfully.
+Prepare an USB stick with the following (and only) files on it in the root directory:
+
+# Pick server:
+
+(required)
+
+### Required Pick Server Files
+
+- FIZ1SETUP.PC
+- FIZYR1.PC
+- FIZ1ROOT.PC
+- FIZ1CH.PC
+- FIZ1TRIG.PC
+- FIZ1CHKDATA.PC
+- FIZFDBKPLACE.PC
+- FIZ1CALIB.PC
+- FIZ_CLR_TAGS.PC
+- FIZ_ADD_TAG.PC
+- FIZ_CLR_ROI.PC
+- FIZ_ADD_ROI.PC
+- RUNFIZYR.PC
+
+## Place verification:
+
+(required if place verification is used)
+
+### Required Place Verification Files
+
+- FIZP1SETUP.PC
+- FIZYRP1.PC
+- FIZP1ROUT.PC
+- FIZP1CH.PC
+- FIZP_DETECT_ADD_ROI.PC
+- FIZP_DETECT_CLR_ROI.PC
+- FIZP_DETECT_ADD_CLASSID.PC
+- FIZP_DETECT_CLR_CLASSIDS.PC
+- FIZP_DETECT_ADD_DESCRIPT.PC
+- FIZP_DETECT_CLR_DESCRIPTS.PC
+- FIZP_VERIFY_ADD_ROI.PC
+- FIZP_VERIFY_CLR_ROI.PC
+- FIZP_VERIFY_ADD_REGION.PC
+- FIZP_VERIFY_CLf REGIONS.PC
+- FIZP_VERIFY_ADD_PRESET.PC
+- FIZP_VERIFY_CLf_PRESETS.PC
+
+# TPE demo programs:
+
+(optional, recommended for first time use)
+
+### Optional TPE Demo Program Files
+
+- MAIN.TP
+- INIT.TP
+- IHOME.TP
+- PICK.TP
+- PLACE.TP
+- GRIPPERON.TP
+- GRIPPEROFF.TP
+- CHECKGRIPPER.TP
+- FIZPLACEVERIFY.TP
+
+<Steps>
+  <Step title="Initial Setup">
+    - Place the USB stick into the USB port on the front of the robot controller.
+    - Turn on the robot controller.
+    - Next steps are on the teachpendant. This is the control handheld of the robot.
+  </Step>
+
+<Step title="Menu Navigation">
+  <Frame width="500px" caption="Press Menu">
+    <img src="/images/fanuc/IMAGE_1.png" alt="Press Menu Screen" />
+  </Frame>
+  Press menu
+</Step>
+
+<Step title="Navigate to NEXT">
+  <Frame caption="Navigation to NEXT">
+    <img src="/images/fanuc/IMAGE_2.png" alt="NEXT Navigation Screen" />
+  </Frame>
+  Scroll with the arrow keys to '0 – NEXT --' Press [ENTER]
+</Step>
+
+<Step title="System Menu">
+  <Frame caption="System Menu">
+    <img src="/images/fanuc/IMAGE_3.png" alt="System Menu Screen" />
+  </Frame>
+  Scroll with the arrow keys to '6 SYSTEM' Press [ENTER]
+</Step>
+
+<Step title="Variables Menu">
+  <Frame caption="Variables Menu">
+    <img src="/images/fanuc/IMAGE_4.png" alt="Variables Menu Screen" />
+  </Frame>
+  Press [F1][TYPE] Select 'Variables' from the pull up menu. Press [ENTER]
+</Step>
+
+  <Step title="Configure KAREL_ENB">
+    <Frame caption="KAREL_ENB Setting">
+      <img src="/images/fanuc/IMAGE_5.png" alt="KAREL_ENB Configuration" />
+    </Frame>
+    Scroll to "$KAREL_ENB" by using the
+    [SHIFT]+[DOWN ARROW] you can scroll
+    faster than only the [DOWN ARROW].
+    Press [1] and confirm with [ENTER]
+    You do not have to leave the screen, just continue with the net steps
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="File Menu Navigation">
+    <Frame caption="Menu">
+      <img src="/images/fanuc/IMAGE_6.png" alt="Menu Screen" />
+    </Frame>
+    Press menu
+
+    <Frame caption="File Menu">
+      <img src="/images/fanuc/IMAGE_7.png" alt="File Menu Screen" />
+    </Frame>
+    Scroll with the arrow keys to '7 FILE'
+    Press [ENTER]
+
+  </Step>
+
+  <Step title="Device Selection">
+    <Frame caption="Device Menu">
+      <img src="/images/fanuc/IMAGE_8.png" alt="Device Menu Screen" />
+    </Frame>
+    Press [F5][UTIL]
+    Select 'Set Device' from the pull up menu.
+    Press [ENTER]
+
+    <Frame caption="USB Selection">
+      <img src="/images/fanuc/IMAGE_9.png" alt="USB Device Selection" />
+    </Frame>
+    From the menu scroll down to 'USB Disk(UD1:)'
+    Press [ENTER]
+
+  </Step>
+
+  <Step title="File Selection">
+    <Frame caption="PC Files">
+      <img src="/images/fanuc/IMAGE_10.png" alt="PC Files Selection" />
+    </Frame>
+    Press [F2][DIR]
+    From the next menu scroll down to '7 *.PC'
+    Press [ENTER]
+
+    <Frame caption="FIZ1SETUP Selection">
+      <img src="/images/fanuc/IMAGE_11.png" alt="FIZ1SETUP Selection" />
+    </Frame>
+    With the arrow keys scroll down to 'FIZ1SETUP'
+    Press [F3][LOAD]
+
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="Confirmation and Program Selection">
+    <Frame caption="Confirmation">
+      <img src="/images/fanuc/IMAGE_12.png" alt="Confirmation Screen" />
+    </Frame>
+    Press [F4][YES]
+
+    <Frame caption="Program Selection">
+      <img src="/images/fanuc/IMAGE_13.png" alt="Program Selection" />
+    </Frame>
+    Press [SELECT]
+    In the following screen, scroll with the arrow keys and select 'FIZ1SETUP'
+    Press [ENTER]
+
+  </Step>
+
+<Step title="Controller Configuration">
+  <Frame caption="T1 Switch">
+    <img src="/images/fanuc/IMAGE_14.png" alt="T1 Switch Setting" />
+  </Frame>
+  Switch the AUTO/T1/T2 Switch on the controller to T1.
+</Step>
+
+  <Step title="Teach Pendant Setup">
+    <Frame caption="Teach Pendant Power">
+      <img src="/images/fanuc/IMAGE_15.png" alt="Teach Pendant Power Settings" />
+    </Frame>
+    - Turn on the teachpendant by switching the on/off switch to 'ON'
+    - The switch may be in the left top corner of the teachpendant in contrast to the picture shown.
+    - At the back of the teachpendant there are 2 deadmanswitches.
+    - Press and hold one of the deadmanswiches, do not squeeze too much and do not keep it too loose.
+    - If held correctly the error on the topline showing 'Deadman switch released' should disappear when [RESET] is pressed.
+    - Press and hold [SHIFT]
+    - Press [FWD]
+    - Release all buttons after a few seconds.
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="Setup Process">
+    <Frame caption="Setup Screen">
+      <img src="/images/fanuc/IMAGE_16.png" alt="Setup Screen" />
+    </Frame>
+    The next screen should appear in 'dual screen mode'
+    Press [F3][SETUP]
+    The setup starts
+    Follow the instructions on the screen until the screen in the next step is shown.
+    Note: The setup will show default values for start number of registers, start number of position registers and start number of outputs. The demo TPE programs assume the use of these defaults. If you decide to change any start numbers, you also need to alter the corresponding numbers in the TPE demo programs accordingly.
+  </Step>
+
+  <Step title="System Reboot">
+    <Frame caption="Reboot Screen">
+      <img src="/images/fanuc/IMAGE_17.png" alt="Reboot Screen" />
+    </Frame>
+    Reboot the controller
+    Continue with next steps when controller is restarted.
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="Post-Reboot Configuration">
+    <Frame caption="FIZ1SETUP Selection">
+      <img src="/images/fanuc/IMAGE_18.png" alt="FIZ1SETUP Selection" />
+    </Frame>
+    Press [SELECT]
+    In the following screen, scroll down with the arrow keys and select 'FIZ1SETUP'
+    Press [ENTER]
+
+    <Frame caption="T1 Mode">
+      <img src="/images/fanuc/IMAGE_19.png" alt="T1 Mode Setting" />
+    </Frame>
+    Switch the AUTO/T1/T2 Switch on the controller to T1.
+
+  </Step>
+
+  <Step title="Teach Pendant Configuration">
+    <Frame caption="Teach Pendant Setup">
+      <img src="/images/fanuc/IMAGE_20.png" alt="Teach Pendant Setup" />
+    </Frame>
+    - Turn on the teachpendant by switching the on/off switch to 'ON'
+    - At the back of the teachpendant there are 2 deadmanswitches.
+    - Press and hold one of the deadmanswiches
+    - If held correctly the error on the topline showing 'Deadman switch released' should disappear when [RESET] is pressed.
+    - Press and hold [SHIFT]
+    - Press [FWD]
+    - Release all buttons after a few seconds.
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="Calibration Setup">
+    <Frame caption="Instructions Screen">
+      <img src="/images/fanuc/IMAGE_21.png" alt="Instructions Screen" />
+    </Frame>
+    When you see this screen, follow the instructions on the screen until the screen in the next step is shown.
+
+    <Frame caption="Calibration Notice">
+      <img src="/images/fanuc/IMAGE_22.png" alt="Calibration Notice" />
+    </Frame>
+    The calibration procedure is required for the Fizyr plugin to work. Please mount the calibration plate to the robot when asked in the next screen.
+
+  </Step>
+
+  <Step title="Calibration Process">
+    <Frame caption="Calibration Plate">
+      <img src="/images/fanuc/IMAGE_23.png" alt="Calibration Plate Setup" />
+    </Frame>
+    Press [F3][DONE] when the calibration plate is mounted.
+
+    <Frame caption="Calibration Process">
+      <img src="/images/fanuc/IMAGE_24.png" alt="Calibration Process" />
+    </Frame>
+    For a good calibration, the calibration plate must be positioned in the camera field of view on different locations with different orientations. The more variations the better the calibration will be. When positions are too close to each other (5mm), the position will not be successfully recorded. When this happens or when the camera could not detect the full calibration plate in the field of view, a message will return that there is an error in recording the position. When successful, the number of positions recorded on the screen will be updated.
+    After 10 to 15 successful positions you could press [F5][FINISH] to store the calibration. If this is not successfully acknowledged by the Fizyr server, an error will return on the screen. Please add more positions or start again with more variations in the recordings.
+    To start again, press [F1][CANCEL] and follow the instructions on the screen.
+
+  </Step>
+</Steps>
+
+When setup and calibration is successfully completed, repeat the same steps for place verification (if used) but then replace 'FIZ1SETUP' with 'FIZP1SETUP' the place verification does not need calibration. The setup will tell you when it is finished.
+
+<Steps>
+  <Step title="Tool Frame Setup">
+    <Frame caption="Tool Setup">
+      <img src="/images/fanuc/IMAGE_25.png" alt="Tool Setup Menu" />
+    </Frame>
+    Prepare TPE Demo programs
+    The TPE demo programs assume there is a home position and place position set, and a tool frame set up.
+    Set up a toolframe
+    For the demo programs there should not be a gripper mounted to the robot. We will setup a virtual gripper which has a suction cup 200 mm straight from the flange.
+    Press [MENU]
+    Navigate to '6 SETUP' with the arrow keys.
+    Press the right arrow key to go to the list on the right and select 'Frames'
+    Press [ENTER]
+  </Step>
+
+  <Step title="Tool Configuration">
+    <Frame caption="First Tool">
+      <img src="/images/fanuc/IMAGE_26.png" alt="First Tool Selection" />
+    </Frame>
+    Keep the cursor on the 1st tool.
+    Press [F2][DETAIL]
+
+    <Frame caption="Z Value">
+      <img src="/images/fanuc/IMAGE_27.png" alt="Z Value Setting" />
+    </Frame>
+    Move down with the arrow keys until you reached the 'Z'
+    Enter '200' with the numbers keys on the teachpendant.
+    Press [ENTER]
+
+  </Step>
+</Steps>
+
+<Steps>
+  <Step title="Position Setup">
+    <Frame caption="Coordinate Menu">
+      <img src="/images/fanuc/IMAGE_28.png" alt="Coordinate Menu" />
+    </Frame>
+    Teach the home and place position
+    Press and hold [SHIFT]
+    Press [COORD]
+    In the top corner of the screen a pulldown menu appears.
+    Release both buttons
+    Press number '1' on the number keys on the teachpendant
+  </Step>
+
+<Step title="Position Registration">
+  <Frame caption="Position Registration">
+    <img src="/images/fanuc/IMAGE_29.png" alt="Position Registration" />
+  </Frame>
+  Press [DATA] Press [F1][TYPE] Navigate to 'Position Reg' with the arrow keys. Press
+  [ENTER]
+</Step>
+
+<Step title="Home Position Setup">
+  <Frame caption="Home Position">
+    <img src="/images/fanuc/IMAGE_30.png" alt="Home Position Setting" />
+  </Frame>
+  Move to the '*' behind PR[10] with the arrow keys. Move the robot to a comfortable
+  position which is easy to reach and out of the field of view from the camera. Press
+  and hold [SHIFT] Press [F3][RECORD] Release both buttons.
+</Step>
+
+  <Step title="Place Position Setup">
+    <Frame caption="Place Position">
+      <img src="/images/fanuc/IMAGE_31.png" alt="Place Position Setting" />
+    </Frame>
+    Move to the '*' behind PR[11] with the arrow keys.
+    Move the robot to the place position.
+    Press and hold [SHIFT]
+    Press [F3][RECORD]
+    Release both buttons.
+  </Step>
+</Steps>
+
+Now your home (start) position and place position is recorded.
+
+The preparations of the TPE demo programs is done. Please read the explanation of the TPE demo programs before starting.

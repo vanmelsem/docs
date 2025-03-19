@@ -1,0 +1,214 @@
+---
+title: "Supervisor Server"
+description: "Documentation for the Fizyr Vision Software service management protocol"
+---
+
+## Available Services
+
+This section describes the available services and their functionality.
+
+<ResponseField name="ping" type="ID: 0">
+  Ping the server.
+</ResponseField>
+
+<ResponseField name="restart_all_services" type="ID: 1000">
+  Restart all the services.
+</ResponseField>
+
+<ResponseField name="reboot" type="ID: 1001">
+  Restart the machine.
+</ResponseField>
+
+<ResponseField name="service_status" type="ID: 2001">
+  Request status of a service.
+</ResponseField>
+
+## Service Details
+
+### Ping Service
+
+**ID:** 0  
+**May be sent by:** client  
+**Description:** Ping the server.
+
+<CodeGroup>
+  ```json Request Body
+  // Empty request body
+  // Total size: 0 bytes
+  ```
+
+```json Response Body
+// Empty response body
+// Total size: 0 bytes
+```
+
+</CodeGroup>
+
+### Restart All Services
+
+**ID:** 1000  
+**May be sent by:** client  
+**Description:** Restart all the services.
+
+<Info>
+  Services are restarted in the order specified in the configuration file.
+</Info>
+
+<CodeGroup>
+  ```json Request Body
+  // Empty request body
+  // Total size: 0 bytes
+  ```
+
+```json Response Body
+// Empty response body
+// Total size: 0 bytes
+```
+
+</CodeGroup>
+
+### Reboot Service
+
+**ID:** 1001  
+**May be sent by:** client  
+**Description:** Restart the machine.
+
+<CodeGroup>
+  ```json Request Body
+  // Empty request body
+  // Total size: 0 bytes
+  ```
+
+```json Response Body
+// Empty response body
+// Total size: 0 bytes
+```
+
+</CodeGroup>
+
+### Service Status
+
+**ID:** 2001  
+**May be sent by:** client  
+**Description:** Request status of a service.
+
+<CodeGroup>
+  ```json Request Body
+  {
+    "service": "string",  // Name of the service
+    "total_size": "variable"
+  }
+  ```
+
+```json Response Body
+{
+  "status": "string", // Status of the service
+  "total_size": "variable"
+}
+```
+
+</CodeGroup>
+
+## Data Types
+
+### Integer Types
+
+All integers are encoded as little-endian. Signed integers are encoded as two's complement.
+
+<ResponseField name="bool" type="1 byte">
+  Boolean value: `false` is encoded as `0`, `true` is encoded as `1`.
+</ResponseField>
+
+<ResponseField name="u8" type="1 byte">
+  Unsigned 8-bit integer.
+</ResponseField>
+
+<ResponseField name="u16" type="2 bytes">
+  Unsigned 16-bit integer.
+</ResponseField>
+
+<ResponseField name="u32" type="4 bytes">
+  Unsigned 32-bit integer.
+</ResponseField>
+
+<ResponseField name="u64" type="8 bytes">
+  Unsigned 64-bit integer.
+</ResponseField>
+
+<ResponseField name="i8" type="1 byte">
+  Signed 8-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i16" type="2 bytes">
+  Signed 16-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i32" type="4 bytes">
+  Signed 32-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i64" type="8 bytes">
+  Signed 64-bit two's complement integer.
+</ResponseField>
+
+### List(T)
+
+Lists are encoded as the number of elements as `u32`, followed by each element.
+
+<ResponseField name="length" type="u32" required>
+  The number of elements in the list: `n`.
+</ResponseField>
+
+<ResponseField name="elements" type="T[]" required>
+  Array of `n` elements, each of size `sizeof(T)` bytes.
+</ResponseField>
+
+<Note>
+  The size of `T` may be variable itself. The size of a `List` is always 4 bytes
+  plus the sum of the size of all elements.
+</Note>
+
+### Optional(T)
+
+Optionals are encoded as a bool that indicates if the `Optional` contains a value, potentially followed by the actual value.
+
+<ResponseField name="has_value" type="bool" required>
+  Flag to indicate if the option contains a value.
+</ResponseField>
+
+<ResponseField name="value" type="T">
+  The value. Only present if `has_value` is `true`.
+</ResponseField>
+
+<Note>
+  The size of `T` may be variable itself. The size of an `Optional` with a value
+  is always 1 byte plus the size of the wrapped value.
+</Note>
+
+### String
+
+Strings are encoded as the number of bytes as `u32`, followed by the raw string data.
+
+<ResponseField name="length" type="u32" required>
+  The number of bytes in the string (`n`).
+</ResponseField>
+
+<ResponseField name="bytes" type="u8[]" required>
+  Array of `n` bytes representing the string data.
+</ResponseField>
+
+### NamedService
+
+Request body for a request that affects a particular service.
+
+<ResponseField name="service" type="string" required>
+  Name of the service.
+</ResponseField>
+
+### ServiceStatus
+
+Status of a service.
+
+<ResponseField name="status" type="string" required>
+  Status of a service.
+</ResponseField>

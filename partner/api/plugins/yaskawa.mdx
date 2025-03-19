@@ -1,0 +1,647 @@
+---
+title: "Yaskawa Integration"
+description: "Guide for developing Fizyr API plugins for Yaskawa robots"
+---
+
+## Overview
+
+Fizyr and Yaskawa have developed the MotoFiz plugin, an expansion module for the MotoPlus SDK. This plugin enables seamless integration between Fizyr's vision system and Yaskawa's MOTOMAN robot controllers.
+
+### What is MotoFiz?
+
+MotoFiz is a specialized expansion module built on top of Yaskawa's MotoPlus SDK. It serves as a bridge between Fizyr's advanced vision capabilities and MOTOMAN controllers, enabling:
+
+- Direct communication between the robot and vision system
+- Automated pick and place operations
+- Real-time vision feedback
+- Advanced calibration features
+
+This guide provides comprehensive instructions for installing and configuring the MotoFiz plugin on your YRC controller.
+
+# MotoFiz Overview
+
+MotoFiz is an expansion module developed using the MotoPlus SDK, a software development kit from Yaskawa designed for creating modules (MotoPlus apps) for MOTOMAN controllers..
+
+The following pages provide instructions for installing and configuring the MotoFiz module.
+
+# Installation
+
+## Prerequisites
+
+Before installing the MotoFiz plugin, ensure you have:
+
+- Access to the YRC controller
+- USB drive for file transfer
+- Required MotoFiz application files
+- Appropriate permissions to modify controller settings
+
+## Step 1: Enable MotoPlus
+
+Follow the official Yaskawa guide to enable MotoPlus on your controller:
+[Enable MotoPlus Guide](https://knowledge.motoman.com/hc/en-us/articles/13087433828631-How-to-Enable-MotoPlus)
+
+## Step 2: Install MotoPlus Application
+
+Follow the official Yaskawa guide to load the MotoPlus application:
+[Loading MotoPlus Application Guide](https://knowledge.motoman.com/hc/en-us/articles/16423922780311-Loading-a-MotoPlus-Application-to-the-Controller)
+
+## Step 3: Load Robot Files
+
+After installing the MotoPlus application, load the robot files using the "External Memory" function:
+
+1. Copy all required files to a USB drive
+2. Boot the controller in ONLINE mode (not maintenance)
+3. Navigate to the "External Memory" menu and select "Load"
+4. Load all files from the USB drive
+5. Open the MOTOFIZ_CONFIG file under JOB > SELECT JOB
+6. Configure the connection information as described in the Usage document
+7. Run the MOTOFIZ_CONFIG job to apply the configurations
+
+> **Warning**: Ensure the controller is in ONLINE mode before proceeding with file loading. Loading files in maintenance mode may result in incomplete installation.
+
+# Configuration
+
+## Overview
+
+The MotoFiz application is configured through a specific inform job file named `MOTOFIZ_CONFIG.JBI`. This file contains configuration parameters stored as comments with unique identifiers.
+
+> **Note**: The configuration file is loaded when the robot boots and can be reloaded at any time using the "Reload Configs" command. Most parameters update immediately, but changes to "CriticalTasks" require a controller reboot.
+
+## General Configuration Parameters
+
+The following parameters control the basic behavior of the MotoFiz application:
+
+<table data-header-hidden data-full-width="true">
+  <thead>
+    <tr>
+      <th width="68">ID</th>
+      <th>Property</th>
+      <th width="99">Example Value</th>
+      <th width="84">Units</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>EnableLogging</td>
+      <td>true</td>
+      <td> </td>
+      <td>
+        Enables logging to terminal if set to true. Overrides "Enable Debug Log"
+        Output.
+      </td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>CriticalTasks</td>
+      <td>2</td>
+      <td> </td>
+      <td>
+        Defines the total number of critical MotoPlus tasks used for
+        communication between the robot and camera. Critical tasks are not
+        required but may increase the response time of communication. (Range is
+        0-3)
+      </td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>SurfacePickHeight</td>
+      <td>100.00</td>
+      <td>mm</td>
+      <td>
+        Minimum height of the pick surface. Used to calculate the approximate
+        height of the picked object when no height value is specified with
+        trigger command.
+      </td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>PickToolNumber</td>
+      <td>-1</td>
+      <td> </td>
+      <td>
+        Tool number assigned to pick poses. Negative values will result in a
+        value of zero being used.
+      </td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>PickUserFrame</td>
+      <td>-1</td>
+      <td> </td>
+      <td>
+        User frame assigned with writing pick position variables. A value less
+        than or equal to zero will have the positions set in robot base frame.
+      </td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>PlaceToolNumber</td>
+      <td>-1</td>
+      <td> </td>
+      <td>
+        Tool number assigned to placement poses. Negative values will result in
+        a value of zero being used.
+      </td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>PlaceUserFrame</td>
+      <td>-1</td>
+      <td> </td>
+      <td>
+        User frame assigned with writing placement position variables. A value
+        less than or equal to zero will have the positions set in robot base
+        frame.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Result Management
+
+### Weight Configuration
+
+Weight values determine how much influence different factors have on the final ranking order:
+
+- `1.0`: No modification to original value
+- `0.0`: Value has no influence
+- Values between 0 and 1: Proportionally decrease the value's significance
+
+### Min & Max Values
+
+These properties normalize values for computing the final ranking order. Values outside the defined ranges may cause incorrect computations.
+
+> **Warning**: Ensure all detected values fall within the defined min/max ranges to avoid ranking computation errors.
+
+### Robot Variable Options
+
+When `EnableVariableParams` is set to "true", options are read from robot variables starting at the address specified by `StartVarAddress`. Parameters are reloaded each time new detection results are written.
+
+Example variable mapping (starting at address 100):
+
+| Variable | Option           | Note                                                             |
+| -------- | ---------------- | ---------------------------------------------------------------- |
+| B100     | EnableSorting    | Any non-zero value will result in the option being set to "true" |
+| R100     | MinAcceptedScore |                                                                  |
+| R113     | AreaWeight       |                                                                  |
+
+## MotoPlus Tasks
+
+> **Note**: This section is for informational purposes only. Configuration of these parameters requires Yaskawa technical support.
+
+The application uses multiple MotoPlus tasks:
+
+- Total tasks used: 4
+- Maximum Critical Priority tasks: 3
+
+If you encounter alarm 8090 [1] "FAILED TO CREATE 'XXX' TASK", the following parameters may need adjustment:
+
+| Parameter | Value | Description                                 |
+| --------- | ----- | ------------------------------------------- |
+| S1D306    | 3     | Number of available Critical Priority tasks |
+| S1D307    | 8     | Total number of available MotoPlus tasks    |
+
+# IO Signals and Registers
+
+## IO Signals Overview
+
+The MotoFiz application uses various IO signals to communicate the state of the system and control operations. These signals are organized into the following categories:
+
+> **Note**: Logging features should be disabled during production operations as they may impact time-sensitive operations.
+
+### Signal Categories
+
+1. **Feedback Signals**: Indicate the state of the MotoPlus application
+2. **Control Signals**: Used for triggering commands and logging features
+3. **Server Signals**: Show the connection and state of each Fizyr server
+
+### Signal Mapping
+
+| Output Address | Group               | Name               | Description                                                        |
+| -------------- | ------------------- | ------------------ | ------------------------------------------------------------------ |
+| #2457          | Feedback            | Running            | ON when MotoPlus is running, OFF when not booted or on fatal error |
+| #2458          | Feedback            | Fatal Error        | A fatal error has occurred, reboot required                        |
+| #2459          | Feedback            | Processing Command | MotoPlus is currently processing a command                         |
+| #2460          | Feedback            | Command Complete   | Most recent command has completed                                  |
+| #2461          | Feedback            | Detection Complete | All detection results are computed and written to variables        |
+| #2465          | Control             | Command Ready      | ON when command ID and parameters are ready for processing         |
+| #2466          | Control             | Dump Log to USB    | Triggers log content dump to CPU board USB                         |
+| #2467          | Control             | Enable Debug Log   | Enable logging and output to I/O terminal                          |
+| #2473          | Calibration Server  | Ready              | Calibration server is connected                                    |
+| #2474          | Calibration Server  | Calibrating        | Calibration is in progress                                         |
+| #2475          | Command Server      | Ready              | Command server is connected                                        |
+| #2476          | Command Server      | Idle               | Server is not processing commands                                  |
+| #2477          | Command Server      | Recording          | Server is capturing imaging data                                   |
+| #2478          | Command Server      | Processing         | Server is processing results                                       |
+| #2479          | Verification Server | Ready              | Verification server is connected                                   |
+| #2480          | Verification Server | Processing         | Server is processing camera data                                   |
+
+## Command Registers
+
+Command registers are used to transmit command data from Inform to the MotoPlus process. The command execution sequence is:
+
+1. Set all required command parameters
+2. Set the command ID value
+3. Set the "Command Ready" Output signal to ON
+
+### Register Mapping
+
+| Output Address | Name         | Description                              |
+| -------------- | ------------ | ---------------------------------------- |
+| #130           | Command ID   | ID number of the command to trigger      |
+| #131           | Parameter #1 | First parameter for command processing   |
+| #132           | Parameter #2 | Second parameter for command processing  |
+| #133           | Parameter #3 | Third parameter for command processing   |
+| #134           | Parameter #4 | Fourth parameter for command processing  |
+| #135           | Parameter #5 | Fifth parameter for command processing   |
+| #136           | Parameter #6 | Sixth parameter for command processing   |
+| #137           | Parameter #7 | Seventh parameter for command processing |
+
+# Commands
+
+Commands are used to control the MotoFiz application from Inform jobs. Each command has a unique ID and may require specific parameters. Commands are executed by setting the command ID and parameters in the registers, then setting the Command Ready signal.
+
+## General Commands
+
+| ID   | Name           | Parameters                                    | Description                                                   |
+| ---- | -------------- | --------------------------------------------- | ------------------------------------------------------------- |
+| 0x01 | Reload Configs |                                               | Reloads the configuration file                                |
+| 0x02 | Clear Results  |                                               | Clears previously used detection result variables             |
+| 0x03 | Get Pick       | 0 - Result Index<br/>1 - Starting var address | Writes specified pick result to desired variable address      |
+| 0x04 | Get Place      | 0 - Result Index<br/>1 - Starting var address | Writes specified placement result to desired variable address |
+
+## Calibration Commands
+
+| ID   | Name                     | Parameters                                                                                | Description                                                |
+| ---- | ------------------------ | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| 0x10 | Ping Calibration         |                                                                                           | Pings the calibration server                               |
+| 0x11 | Start Calibration        |                                                                                           | Starts calibration routine, clearing current data          |
+| 0x12 | Record Calibration Point | 0 - P.Var address                                                                         | Captures calibration target image and saves robot position |
+| 0x13 | Compute Calibration      | 0 - Calibration result P-Var address<br/>1 - Reprojection error R-Var address             | Computes final calibration and returns results             |
+| 0x14 | Get Calibration Result   | 0 - Calibration result P-Var address                                                      | Gets current calibration pose as position variable         |
+| 0x15 | Workspace Calibration    | 0 - Pattern position P-Var address<br/>1 - Number of samples<br/>2 - Result P-Var address | Uses workspace calibration mode for multiple points        |
+
+## Vision Commands
+
+| ID   | Name                          | Parameters                                                                                                                              | Description                                             |
+| ---- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 0x20 | Ping Command                  |                                                                                                                                         | Pings the command server                                |
+| 0x21 | Trigger Pick                  | 0 - Starting result var address                                                                                                         | Triggers pick detection and outputs results             |
+| 0x22 | Set ROI                       | 0 - ROI D-Variable starting address                                                                                                     | Sets Region of Interest for detection                   |
+| 0x23 | Trigger Pick & Set ROI        | 0 - ROI D-Variable address<br/>1 - Result var address                                                                                   | Sets ROI and triggers detection                         |
+| 0x24 | Stop                          |                                                                                                                                         | Stops command server processing                         |
+| 0x25 | Post Feedback                 | 0 - Data ID<br/>1 - Detection ID<br/>2 - Post ID<br/>3 - Pick result                                                                    | Sends pick feedback to server                           |
+| 0x26 | Post Feedback & Stop          | 0 - Data ID<br/>1 - Detection ID<br/>2 - Post ID<br/>3 - Pick result status                                                             | Stops processing and posts pick feedback                |
+| 0x27 | Trigger Place                 | 0 - ROI D-Variable address<br/>1 - Starting result var address                                                                          | Triggers placement detection                            |
+| 0x28 | Trigger Place w/IDs           | 0 - ROI D-Variable address<br/>1 - Detection result ID<br/>2 - Grasp ID<br/>3 - Starting result var address                             | Triggers placement detection with object IDs            |
+| 0x29 | Trigger Place w/ID and Height | 0 - ROI D-Variable address<br/>1 - Detection result ID<br/>2 - Grasp ID<br/>3 - Height DVar address<br/>4 - Starting result var address | Triggers placement detection with object IDs and height |
+
+## Verification Commands
+
+| ID   | Name                      | Parameters                                                                                                 | Description                                 |
+| ---- | ------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 0x40 | Ping Verification         |                                                                                                            | Pings verification server                   |
+| 0x41 | Verify                    | 0 - Result B-var address                                                                                   | Triggers verification, outputs object count |
+| 0x42 | Verify with ROI           | 0 - ROI D-Variable address<br/>1 - Result start address                                                    | Verifies with custom Region of Interest     |
+| 0x43 | Verify with Preset Region | 0 - Preset region ID<br/>1 - Result B-Var address                                                          | Verifies using preconfigured region         |
+| 0x44 | Verify with Check Region  | 0 - Minimum objects<br/>1 - Maximum objects<br/>2 - Region D-Variable address<br/>3 - Result B-Var address | Verifies with custom check region           |
+
+# Macros
+
+## Standard Macros
+
+MotoFiz provides a set of standard macros to simplify common operations. These macros can be called directly from Inform jobs, making it easier to interact with the MotoFiz functionality.
+
+<img
+  alt="MotoFiz Standard Macros Light"
+  className="block rounded-lg dark:hidden"
+  src="/images/macros.jpg"
+/>
+<img
+  alt="MotoFiz Standard Macros Dark"
+  className="hidden rounded-lg dark:block"
+  src="/images/macros.jpg"
+/>
+
+## Data Dictionary
+
+### Pick Result Status
+
+The following status codes are used to report the outcome of pick/place operations to the Fizyr server:
+
+| Value | Status                             | Description                                         |
+| ----- | ---------------------------------- | --------------------------------------------------- |
+| 0     | Unused                             | Pose received but not executed (unspecified reason) |
+| 1     | Success                            | Pose executed with successful pick                  |
+| -1    | Failed                             | Pose executed with unknown/unspecified failure      |
+| -2    | Failed – Pick                      | Pose executed but failed to pick object             |
+| -3    | Failed – Object Lost               | Object picked but lost before placement             |
+| -4    | Failed – Gripper Collision         | Gripper collision detected during execution         |
+| -5    | Failed – Robot Collision           | Robot collision detected during execution           |
+| -6    | Rejected – Gripper Collision       | Pose rejected due to predicted gripper collision    |
+| -7    | Rejected – Robot Collision         | Pose rejected due to predicted robot collision      |
+| -8    | Mismatch Database Object Dimension | Object dimensions don't match database              |
+| -9    | Double Pick                        | Multiple objects picked simultaneously              |
+| -10   | Exceeding Max Weight               | Picked item exceeds system weight limit             |
+| -11   | Dimensions Out of Range            | Object dimensions outside working range             |
+| -12   | Non-conveyable Shape               | Object shape not suitable for system                |
+| -13   | Non-conveyable Material            | Object material not suitable for system             |
+
+### Result Write Status
+
+Status codes indicating the success or failure of detection result writing:
+
+| Value | Description                                              |
+| ----- | -------------------------------------------------------- |
+| 0     | Unused                                                   |
+| 1     | Success                                                  |
+| -1    | Max result count is zero in config                       |
+| -2    | No camera results received                               |
+| -3    | Invalid min/max configurations                           |
+| -4    | Invalid minimum score configuration                      |
+| -5    | No results after reorder (possible min score truncation) |
+
+### Region Definition
+
+Regions are defined by polygon points in the camera's 2D image space:
+
+> **Note**: Regions must have 3-15 points. Points are defined by X (horizontal) and Y (vertical) coordinates based on camera resolution.
+
+Example of a 1920x1080 rectangular region:
+
+| Address | Value | Point | Coordinate |
+| ------- | ----- | ----- | ---------- |
+| 100     | 4     | Count | -          |
+| 101     | 0     | 0     | X          |
+| 102     | 0     | 0     | Y          |
+| 103     | 0     | 1     | X          |
+| 104     | 1080  | 1     | Y          |
+| 105     | 1920  | 2     | X          |
+| 106     | 1080  | 2     | Y          |
+| 107     | 1920  | 3     | X          |
+| 108     | 0     | 3     | Y          |
+
+# Data Dictionary - MotoFiz
+
+### Enumerations
+
+#### Pick Result Status:
+
+This enumeration is used to send the result of the pick/place operation to the Fizyr server to associate a result with each camera trigger.
+
+| Value | Name                               | Description                                                                                                                                                                                    |
+| ----- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0     | Unused                             | The pose was received but was not executed for an unspecified reason.                                                                                                                          |
+| 1     | Success                            | The pose was executed and resulted in a successful pick.                                                                                                                                       |
+| -1    | Failed                             | The pose was executed, but an unknown or unspecified failure occurred.                                                                                                                         |
+| -2    | Failed – Pick                      | The pose was executed, but it resulted in failure to pick up the object.                                                                                                                       |
+| -3    | Failed – Object Lost               | The pose was executed, and the object was successfully picked up, but the object was lost before placing it.                                                                                   |
+| -4    | Failed – Gripper Collision         | The pose was executed, but a gripper collision was detected during execution.                                                                                                                  |
+| -5    | Failed – Robot Collision           | The pose was executed, but a robot collision was detected during execution.                                                                                                                    |
+| -6    | Rejected – Gripper Collision       | The pose was analyzed and rejected due to predicted gripper collision.                                                                                                                         |
+| -7    | Rejected – Robot Collision         | The pose was analyzed and rejected due to predicted robot collision.                                                                                                                           |
+| -8    | Mismatch Database Object Dimension | The dimensions of the detected object do not match the dimensions provided by the database (for example, warehouse management system).                                                         |
+| -9    | Double Pick                        | The pose was executed and resulted in a double pick.                                                                                                                                           |
+| -10   | Exceeding Max Weight               | The pose was successfully executed, but the picked item exceeds the maximum weight supported by the system. This should be used only if the picking system has a sensor to measure the weight. |
+| -11   | Dimensions Out of Range            | The pose is valid, but the object dimensions provided by the vision system are out of the working range of the picking system.                                                                 |
+| -12   | Non-conveyable Shape               | The pose is valid, but the object shape provided by the vision system is non conveyable by the picking system.                                                                                 |
+| -13   | Non-conveyable Material            | The pose is valid, but the object material provided by the vision system is non conveyable by the picking system.                                                                              |
+
+#### Result Write Status:
+
+This status is used to determine the success or error of the detection result writing process.
+
+| Value | Description                                                                  |
+| ----- | ---------------------------------------------------------------------------- |
+| 0     | Unused                                                                       |
+| 1     | Success                                                                      |
+| -1    | Max result count set to zero in configuration file                           |
+| -2    | No results received from camera                                              |
+| -3    | Invalid min/max configurations                                               |
+| -4    | Invalid minimum score configuration                                          |
+| -5    | No output obtained after reorder. (Min score may have truncated all results) |
+
+### Input Variables
+
+#### Region / Region of Interest:
+
+The region input data is defined by the count of points in the polygon followed by the associated X and Y coordinates for each point of the polygon. These regions define a space within the camera's 2D image space. The data is based on the available pixel resolution of the camera, where "X" is the horizontal axis (width) and "Y" is the vertical axis (height) or the image. The example below, defines a rectangle region of 1920x1080 starting in the upper left corner \[0, 0].
+
+**Note:** The minimum number of points is 3 to form a proper polygon and the maximum supported amount is **15 points**.
+
+| 100 | 4    | Count of points in the region polygon |                |
+| --- | ---- | ------------------------------------- | -------------- |
+|     |      | **Point Index**                       | **Coordinate** |
+| 101 | 0    | 0                                     | X              |
+| 102 | 0    | 0                                     | Y              |
+| 103 | 0    | 1                                     | X              |
+| 104 | 1080 | 1                                     | Y              |
+| 105 | 1920 | 2                                     | X              |
+| 106 | 1080 | 2                                     | Y              |
+| 107 | 1920 | 3                                     | X              |
+| 108 | 0    | 3                                     | Y              |
+
+### Output Variables
+
+#### Placement Verification Results
+
+The results of the verification processing. Determining the number of objects present within either the full camera field of view or a defined region. Additionally, a success/failure status is applied if a defined or predefined region is specified.
+
+| 100 | Number of detected objects.                            |                    |
+| --- | ------------------------------------------------------ | ------------------ |
+| 101 | Determines if the _Check Preset_ result value is valid | 0=invalid 1=valid  |
+| 102 | Determines if the _Check Region_ result value is valid | 0=invalid 1=valid  |
+| 103 | The success status of the _Check Preset_ results       | 0=failed 1=success |
+| 104 | The success status of the _Check Region_ results       | 0=failed 1=success |
+
+### Object Descriptors
+
+During detection, each object is analyzed and classified into three categories:
+
+1. Shape
+2. Material
+3. Occlusion
+
+These descriptors are stored in R-variables in the order listed above. The index values help identify which R-Variable corresponds to each descriptor and what the "Max descriptor index" refers to.
+
+#### Shape Classifications
+
+| Index | Type     |
+| ----- | -------- |
+| 0     | Box      |
+| 1     | Bag      |
+| 2     | Envelope |
+| 3     | Cylinder |
+| 4     | Other    |
+
+#### Material Classifications
+
+| Index | Type         |
+| ----- | ------------ |
+| 0     | Cardboard    |
+| 1     | Paper        |
+| 2     | Soft Plastic |
+| 3     | Hard Plastic |
+| 4     | Metal        |
+| 5     | Glass        |
+| 6     | Other        |
+
+#### Occlusion Classifications
+
+| Index | Type       |
+| ----- | ---------- |
+| 0     | Foreground |
+| 1     | Background |
+
+### Variable Types
+
+MotoFiz uses four types of variables to store detection and operation results:
+
+#### I Variables (Integer)
+
+Used for status codes, counts, and IDs:
+
+| Address | Value | Index | Description                                        |
+| ------- | ----- | ----- | -------------------------------------------------- |
+| 100     | 1     | -     | Result write status code                           |
+| 101     | 2     | -     | Result count                                       |
+| 102     | 50    | -     | Unique Data ID for trigger feedback                |
+| 103+    | ...   | 0+    | Detection-specific data (IDs, counts, descriptors) |
+
+#### D Variables (Double)
+
+Store object dimensions and suction group information:
+
+| Address | Value  | Result | Grasp | Description                      |
+| ------- | ------ | ------ | ----- | -------------------------------- |
+| 100     | 561651 | 0      | 0     | Object length                    |
+| 101     | 864318 | 0      | 0     | Object width                     |
+| 102     | 2      | 0      | 0     | Suction-Group ID List length     |
+| 103+    | ...    | 0+     | 0+    | Suction-Group IDs and other data |
+
+#### R Variables (Real)
+
+Store confidence scores and descriptor values:
+
+| Address | Value | Result | Category  | Description                            |
+| ------- | ----- | ------ | --------- | -------------------------------------- |
+| 100     | 0.78  | 0      | -         | Overall confidence score               |
+| 101+    | ...   | 0      | Shape     | Shape descriptor confidence scores     |
+| 106+    | ...   | 0      | Material  | Material descriptor confidence scores  |
+| 113+    | ...   | 0      | Occlusion | Occlusion descriptor confidence scores |
+
+#### P Variables (Position)
+
+Store position data for picks and placements:
+
+| Address | Result | Grasp | Description             |
+| ------- | ------ | ----- | ----------------------- |
+| 100     | 0      | 0     | Suggested pick position |
+| 101     | 0      | 0     | Object position         |
+| 102+    | 0+     | 0+    | Additional positions    |
+
+> **Note**: Each Grasp Proposal for each Detection Result receives its own suggested pick position and object position.
+
+# System Alarms
+
+## Overview
+
+The MotoFiz application may trigger various alarms to indicate errors or issues. These alarms are categorized by their functionality and include a main code and sub-code for precise identification.
+
+## Task Management Alarms
+
+Alarms related to MotoPlus task creation and management:
+
+| Main Code | Sub Code    | Description                               |
+| --------- | ----------- | ----------------------------------------- |
+| 8100      | 1           | Failed to create Main/Inform task         |
+| 8100      | 2           | Failed to create Command Client task      |
+| 8100      | 3           | Failed to create Verification Client task |
+| 8100      | 4           | Failed to create Calibration Client task  |
+| 8101      | Location ID | Semaphore timeout                         |
+| 8102      | Location ID | Semaphore timeout (possible deadlock)     |
+
+## Configuration Alarms
+
+Alarms related to configuration file handling and parameter validation:
+
+| Main Code | Sub Code  | Description                               |
+| --------- | --------- | ----------------------------------------- |
+| 8116      | 1         | Failed to save configuration to DRAM      |
+| 8116      | 2         | Failed to open configuration file         |
+| 8117      | Config ID | Missing specified configuration           |
+| 8118      | Config ID | Missing value for specified configuration |
+| 8119      | Config ID | Invalid configuration value               |
+| 8120      | None      | Failed to read Result Sorting Parameters  |
+| 8121      | None      | Values outside min/max sorting configs    |
+
+## Command Processing Alarms
+
+Alarms related to Inform command processing:
+
+| Main Code | Sub Code     | Description                         |
+| --------- | ------------ | ----------------------------------- |
+| 8132      | Command ID   | Invalid/unknown command ID          |
+| 8133      | None         | Too few ROI/region points (min 3)   |
+| 8134      | None         | Too many ROI/region points (max 15) |
+| 8135      | None         | Invalid detection result ID         |
+| 8136      | None         | Invalid grasp result ID             |
+| 8137      | Result Index | No results or index out of range    |
+
+## Server Communication Alarms
+
+### Calibration Server
+
+| Main Code | Sub Code | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| 8148      | \*       | Communication error (see subcodes below) |
+| 8149      | None     | Unknown response data error              |
+| 8150      | None     | Calibration pattern not found            |
+| 8151      | None     | No calibration points recorded           |
+| 8152      | None     | Insufficient calibration points          |
+| 8153      | None     | Calibration computation failed           |
+| 8154      | None     | No calibration frame specified           |
+
+### Command Server
+
+| Main Code | Sub Code | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| 8164      | \*       | Communication error (see subcodes below) |
+| 8165      | None     | Unknown response data error              |
+| 8166      | None     | Incomplete request                       |
+
+### Verification Server
+
+| Main Code | Sub Code | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| 8180      | \*       | Communication error (see subcodes below) |
+| 8181      | None     | Unknown response data error              |
+| 8182      | None     | Invalid response extension count         |
+| 8183      | None     | Invalid response extension tag           |
+
+### Communication Error Subcodes
+
+When a server communication alarm occurs (8148, 8164, or 8180), the following subcodes provide additional detail:
+
+| Sub Code | Description                               |
+| -------- | ----------------------------------------- |
+| 1        | Server connection not open                |
+| 2        | Socket connection error                   |
+| 3        | Lost server communication                 |
+| 4        | Request data error                        |
+| 5        | Response timeout                          |
+| 6        | Response data error                       |
+| 7        | Unsupported service                       |
+| 8        | Send operation socket error               |
+| 9        | Receive operation socket error            |
+| 10       | Failed to receive RPC Message size bytes  |
+| 11       | RPC Message size too small                |
+| 12       | RPC Message size too large                |
+| 13       | Invalid Message content bytes received    |
+| 14       | Failed to allocate RPC Message buffer     |
+| 15       | Connection forcibly closed by remote host |
+| 16       | Fizyr server internal communication error |
+
+> **Note**: When troubleshooting server communication issues, always check network connectivity and server status first before investigating specific error codes.

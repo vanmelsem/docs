@@ -1,0 +1,146 @@
+---
+title: "RPC Protocol"
+description: "Documentation for the Fizyr Vision Software RPC protocol specification v1.3.2"
+---
+
+## Overview
+
+This document describes the RPC protocol used by Fizyr applications. Each application implements its own unique interface on top of this RPC protocol. Refer to the documentation of the application for the available services.
+
+## Protocol Description
+
+In the Fizyr RPC protocol, messages are sent between clients and a server. In general, a Fizyr application acts as server while the customer implements a client. After connecting to the server, clients can send request messages to the server for a specific service, to which the server will reply with a response message when finished. Before the response message arrives, update messages may be sent by either side.
+
+<Info>
+  The response messages do not need to arrive in the order that the request
+  messages were sent. This allows peers to issue multiple requests in parallel
+  without slower requests blocking quick requests.
+</Info>
+
+### Message Types
+
+The protocol supports the following types of messages:
+
+<ResponseField name="request" type="primary">
+  Initial request from client to server for a specific service.
+</ResponseField>
+
+<ResponseField name="response" type="primary">
+  Final response from server to client for a specific request.
+</ResponseField>
+
+<ResponseField name="request_update" type="secondary">
+  Additional information from client for a previous request (e.g., sending large
+  data in chunks).
+</ResponseField>
+
+<ResponseField name="response_update" type="secondary">
+  Progress updates from server before final response (e.g., camera recording
+  status).
+</ResponseField>
+
+<ResponseField name="notify" type="info">
+  One-way messages that don't require response or updates.
+</ResponseField>
+
+### Message Layout
+
+#### RPC Message Structure
+
+| Field      | Size    | Description                                                                   |
+| ---------- | ------- | ----------------------------------------------------------------------------- |
+| type       | 4 bytes | The message type. See the table below.                                        |
+| request_id | 4 bytes | Chosen by request sender.                                                     |
+| service_id | 4 bytes | Indicates the service being requested, or `error_code` for response messages. |
+| data       | N bytes | Service specific data.                                                        |
+
+#### Message Type Values
+
+| Message Type    | Value |
+| --------------- | ----- |
+| request         | 0     |
+| response        | 1     |
+| request_update  | 2     |
+| response_update | 3     |
+| notify          | 4     |
+
+### TCP Framing
+
+TCP provides a reliable byte stream but requires additional message framing. The framing structure is:
+
+| Field      | Size     | Description                  |
+| ---------- | -------- | ---------------------------- |
+| size       | 4 bytes  | Size of the message: N + 12. |
+| RPC header | 12 bytes |                              |
+| data       | N bytes  | RPC message specific data    |
+
+<Note>
+  All integers are encoded in little-endian to allow for cheap parsing on most
+  common CPU types.
+</Note>
+
+### Request ID Allocation
+
+<ResponseField name="Single Request">
+  If the client has only one request pending at a time, the request ID can be
+  set to 0.
+</ResponseField>
+
+<ResponseField name="Single Service">
+  If the client executes multiple requests but only one per service, the service
+  ID can be used as the request ID.
+</ResponseField>
+
+<ResponseField name="Multiple Requests">
+  For multiple parallel requests, use an incrementing counter for the
+  request_id.
+</ResponseField>
+
+## Example Messages
+
+### Echo Request Example
+
+| Field      | Size     | Value          |
+| ---------- | -------- | -------------- |
+| size       | 4 bytes  | 24             |
+| type       | 4 bytes  | 0              |
+| request_id | 4 bytes  | 21             |
+| service_id | 4 bytes  | 0              |
+| data       | 12 bytes | "Hello World!" |
+
+### Success Response Example
+
+| Field      | Size     | Value          |
+| ---------- | -------- | -------------- |
+| size       | 4 bytes  | 24             |
+| type       | 4 bytes  | 1              |
+| request_id | 4 bytes  | 21             |
+| service_id | 4 bytes  | 0              |
+| data       | 12 bytes | "Hello World!" |
+
+### Error Response Example
+
+| Field      | Size     | Value                       |
+| ---------- | -------- | --------------------------- |
+| size       | 4 bytes  | 37                          |
+| type       | 4 bytes  | 1                           |
+| request_id | 4 bytes  | 21                          |
+| service_id | 4 bytes  | -1                          |
+| data       | 25 bytes | "failed to process request" |
+
+## Best Practices
+
+<Info>
+  Always match response and update messages with their original request using
+  the request_id.
+</Info>
+
+<Warning>
+  Ensure proper handling of out-of-order responses when executing parallel
+  requests.
+</Warning>
+
+<Tip>
+  Use request_update messages to efficiently transmit large amounts of data in
+  chunks.
+</Tip>

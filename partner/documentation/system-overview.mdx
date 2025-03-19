@@ -1,0 +1,227 @@
+---
+title: "System Overview"
+description: "Comprehensive guide to Fizyr vision system setup, configuration, and operation"
+---
+
+## 1. Vision Pack Hardware Setup
+
+### Initial Hardware Installation
+
+1. **Vision AI Server Setup**
+
+   - Position server in a ventilated area
+   - Connect to stable power source
+   - Establish network connection via Ethernet
+
+2. **Camera Installation**
+
+   - Mount cameras according to cell design specifications
+   - Verify no obstructions in camera view
+   - Install and position lighting systems as needed
+
+3. **Connection Setup**
+   - Connect cameras to vision AI server
+   - Ensure cable connections are secure
+   - Verify power connections for all components
+
+### System Power and Network Configuration
+
+1. **Power Initialization**
+
+   - Power up robot system
+   - Start vision AI server
+   - Initialize camera systems
+
+2. **Network Setup**
+
+   - Configure network settings for all components
+   - Verify communication between devices
+   - Ensure all components are on same network
+
+3. **System Calibration**
+   - Perform camera calibration
+   - Execute robot calibration procedures
+   - Conduct initial system tests
+
+## 2. Software Installation
+
+### Prerequisites
+
+- Internet connection required
+- No external USB devices connected
+- Monitor connected to onboard video port
+- iGPU set as primary in BIOS
+- Secure Boot disabled in BIOS
+
+### Installation Process
+
+1. **Prepare Installation Media**
+
+   - Download Balena installation image
+   - Extract the image file
+   - Write to USB using [Etcher](https://www.balena.io/etcher/)
+
+2. **System Installation**
+
+   - Insert USB drive
+   - Boot from USB (typically F10 key)
+   - Allow automatic installation
+   - Wait for system shutdown
+   - Remove USB drive
+   - Restart system
+
+3. **Post-Installation**
+   - Wait for desktop environment
+   - Set admin user password
+   - Note system name for configuration
+
+<Warning>
+  All existing files will be erased during installation. Ensure important data
+  is backed up before proceeding.
+</Warning>
+
+## 3. Configuration Setup
+
+### Configuration Installation
+
+1. **Initial Setup**
+   - Copy default configuration zip file to system
+   - Open tilix terminal
+   - Login as admin: `su --login admin`
+   - Run configuration: `sudo fizyr-config-manager restore <configuration file location>`
+   - Reboot system
+
+### Network Interface Configuration
+
+1. **Network Manager Setup**
+
+   - Launch Network Manager TUI: `nmtui`
+   - Select "Edit a connection"
+   - Choose connection to modify
+   - Configure IP, gateway, DNS settings
+   - Save changes
+
+2. **Apply Network Changes**
+   ```bash
+   sudo systemctl restart NetworkManager
+   ```
+
+## 4. User Interface
+
+### Interface Overview
+
+The Fizyr interface provides comprehensive control and monitoring of the vision system. Key elements include:
+
+1. **Navigation Toggle**: Controls navigation panel visibility
+2. **Navigation Panel**: Links to different system pages
+3. **Version Display**: Shows current interface version
+4. **Connection Status**: Indicates backend connection status and machine name
+5. **System Control**: Provides system power options
+6. **Content Panel**: Displays selected page content
+
+### Dashboard
+
+#### System Information
+
+The dashboard displays critical system details:
+
+- Current system status
+- Local IP address
+- Host OS version
+- MAC address
+- Supervisor version
+
+#### Services Management
+
+Monitor and control system services:
+
+- View service status (Running, Stopping, Exited)
+- Service release information
+- Start/stop/restart controls
+
+<Note>
+  The "Running" status includes services in initialization. Future updates will
+  add a separate initialization status.
+</Note>
+
+#### System Logs
+
+Access and manage system logs:
+
+- Real-time log feed
+- Download log files
+- Clear log display
+
+### Live Feed
+
+The Live Feed provides real-time camera monitoring:
+
+- Pause/Play controls for image flow
+- Channel selection for different visualizations
+- Real-time quality and detection monitoring
+
+### Review Tool
+
+The Review Tool enables historical analysis:
+
+- Access to past operation logs
+- System performance analysis
+- Troubleshooting capabilities
+
+### File Manager
+
+#### Access and Navigation
+
+- Secure login required
+- Structured directory view
+- Service-specific configuration access
+
+#### Configuration Management
+
+1. **Editing Files**
+
+   - Select target directory
+   - Choose configuration file
+   - Make necessary modifications
+   - Save changes
+
+2. **Configuration Format**
+   ```yaml
+   # Example configuration
+   # listen_port: 2001  # Default (commented)
+   listen_port: 4321 # Modified setting
+   ```
+
+<Note>
+  Configuration changes require service restart to take effect. Use the
+  Dashboard's Services panel to restart affected services.
+</Note>
+
+#### Best Practices
+
+- Review changes before saving
+- Maintain configuration backups
+- Restart services after changes
+- Document modifications
+
+## 5. System Management
+
+### Service Control
+
+- Monitor service status through dashboard
+- Restart services after configuration changes
+- Track service logs for issues
+
+### Maintenance
+
+- Regular log review
+- Configuration backup
+- System updates when available
+- Performance monitoring
+
+### Troubleshooting
+
+- Use Review Tool for historical analysis
+- Monitor real-time logs
+- Check service status
+- Verify network connections

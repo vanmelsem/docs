@@ -1,0 +1,211 @@
+---
+title: "Server Configuration"
+description: "Configure and optimize Fizyr servers for vision-guided robotics"
+---
+
+## Overview
+
+Fizyr's server infrastructure consists of several specialized components:
+
+- **Detection Server**: Handles object detection and pose estimation
+- **Picking Server**: Manages pick point generation and grasp planning
+- **Placement Verification Server**: Verifies successful object placement
+
+Each server can be configured independently to optimize performance for specific use cases and hardware configurations.
+
+## General Configuration Principles
+
+When configuring any Fizyr server, consider these key aspects:
+
+1. **Hardware Resources**: Ensure proper GPU/CPU allocation
+2. **Performance Optimization**: Balance accuracy and speed
+3. **Model Selection**: Choose appropriate pre-trained models
+4. **System Integration**: Configure network and communication settings
+
+Let's explore the configuration options for each server component in detail.
+
+## Detection Server Configuration
+
+The Detection Server is responsible for processing images and detecting objects using neural networks. Here's how to configure its key parameters:
+
+### Model Configuration
+
+#### Model Path
+
+Specify the path to your pre-trained model weights:
+
+```yaml
+model_path: /etc/fizyr/weights/general_binpick_1.0.0.pt
+```
+
+This path should point to your neural network weights file. Ensure the model file exists and has the correct permissions.
+
+#### Confidence Threshold
+
+Set the minimum confidence score for valid detections:
+
+```yaml
+score_threshold: 0.75
+```
+
+The `score_threshold` determines which detections are considered valid:
+
+- Higher values (e.g., 0.75) result in fewer but more confident detections
+- Lower values increase detection count but may include more false positives
+
+### Hardware Settings
+
+#### GPU Selection
+
+Choose which GPU to use for inference:
+
+```yaml
+gpu: 0
+```
+
+Available options:
+
+- `0` to `n`: Use specific GPU by index
+- `-1`: Use CPU instead of GPU
+
+#### Precision Settings
+
+Configure the model's numerical precision:
+
+```yaml
+half_precision: false
+```
+
+This setting affects model performance and resource usage:
+
+- `true`: Reduces memory usage but may slightly decrease accuracy
+- `false`: Uses full precision for maximum accuracy
+
+### Best Practices
+
+When configuring the Detection Server:
+
+1. **Model Selection**: Choose models trained on similar objects to your use case
+2. **Threshold Tuning**: Start with a high confidence threshold (0.75) and adjust based on results
+3. **Resource Allocation**: Dedicate a GPU to the Detection Server when possible
+4. **Regular Updates**: Keep model weights updated with the latest versions
+
+## Picking Server Configuration
+
+The Picking Server manages pick point generation and grasp planning, integrating various components for optimal pick success. Here are the key configuration areas:
+
+### Core Components
+
+The picking server configuration is divided into several key areas:
+
+1. **General Settings**: Basic server configuration
+2. **Container Detection**: Settings for bin and container recognition
+3. **Detection Filters**: Rules for filtering and processing detections
+4. **Detection Prioritization**: Configuration for pick order optimization
+5. **Region/Volume of Interest**: Spatial constraints for picking operations
+6. **Collision Prevention**: Wall and obstacle avoidance settings
+
+### Configuration Structure
+
+Each component has its own configuration section in the server configuration file. Here's an overview of the main sections:
+
+```yaml
+picking_server:
+  # General server settings
+  general:
+    tcp_bind: "[::]:5000"
+    log_directory: "/var/log/fizyr/picking"
+
+  # Container detection settings
+  container:
+    enabled: true
+    detection_threshold: 0.8
+
+  # Region of Interest configuration
+  roi:
+    enabled: true
+    margin: 50 # mm
+
+  # Volume of Interest settings
+  voi:
+    min_height: 0
+    max_height: 500 # mm
+```
+
+### Best Practices
+
+For optimal picking server performance:
+
+1. **Configuration Validation**: Test settings in a staging environment first
+2. **Performance Monitoring**: Regularly review pick success rates
+3. **Safety First**: Configure appropriate collision prevention settings
+4. **Regular Updates**: Keep all components updated to latest compatible versions
+
+The following components can be configured in detail:
+
+- Collision Walls
+- Container Detection
+- Detection Filters
+- Detection Prioritization
+- Region of Interest
+- Volume of Interest
+
+## Placement Verification Server Configuration
+
+The Placement Verification Server validates successful object placement operations. Most configuration options are set during runtime requests, but some core settings need to be configured in the server configuration file.
+
+### Network Configuration
+
+Configure the server's network binding:
+
+```yaml
+tcp:
+  bind: "[::]:1234"
+```
+
+This setting determines:
+
+- The network interface to listen on
+- The port number for incoming connections
+- IPv6 compatibility (using `[::]`)
+
+### Logging Configuration
+
+Configure image logging and storage:
+
+```yaml
+log:
+  directory: /srv/logs/placement-verification
+  save_images: true
+```
+
+These settings control:
+
+- **directory**: Location for storing verification logs and images
+- **save_images**: Enable/disable image storage for verification results
+
+### Runtime Configuration
+
+Most operational parameters are configured during API requests, including:
+
+- Verification thresholds
+- Region of interest
+- Validation criteria
+
+### Best Practices
+
+For optimal placement verification:
+
+1. **Storage Planning**: Ensure sufficient disk space for image logging
+2. **Network Access**: Configure firewall rules to allow required connections
+3. **Log Rotation**: Implement log rotation to manage storage usage
+4. **Monitoring**: Regular monitoring of verification results and storage usage
+
+---
+
+## Support
+
+For additional support or configuration assistance:
+
+- Contact Fizyr Support
+- Review system logs for troubleshooting

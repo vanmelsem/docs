@@ -1,0 +1,94 @@
+---
+title: "Camera Calibration"
+description: "Complete guide to camera calibration processes and verification methods for Fizyr vision systems"
+---
+
+## Overview
+
+By default, the Fizyr system calculates poses within the camera's base frame. Calibration is necessary to establish the transformation between the camera frame and the robot frame. This process is managed through the calibration-server module using RPC/TCP communication.
+
+<Note>
+  Ensure that your camera is properly connected and configured before starting
+  the calibration process. Refer to your specific camera's installation
+  documentation for setup instructions.
+</Note>
+
+## Calibration Types
+
+The calibration method depends on two key factors:
+
+### Camera Position
+
+- **Eye-to-Hand Calibration**: Camera is statically mounted within the robotic cell
+- **Eye-in-Hand Calibration**: Camera is attached directly to the robot
+
+### Degrees of Freedom (DoF)
+
+- **High DoF**: End-effector has at least six degrees of freedom relative to the camera
+- **Low DoF**: Limited degrees of freedom between components
+
+## Calibration Methods
+
+Choose the appropriate calibration method based on your setup:
+
+| Method                 | Description                                | Documentation                                             |
+| ---------------------- | ------------------------------------------ | --------------------------------------------------------- |
+| Eye-to-Hand (High DoF) | Static camera with full robot movement     | [View Guide](calibration-methods/eye-to-hand-high-dof.md) |
+| Eye-to-Hand (Low DoF)  | Static camera with limited robot movement  | [View Guide](calibration-methods/eye-to-hand-low-dof.md)  |
+| Eye-in-Hand (High DoF) | Robot-mounted camera with full movement    | [View Guide](calibration-methods/eye-in-hand-high-dof.md) |
+| Eye-in-Hand (Low DoF)  | Robot-mounted camera with limited movement | [View Guide](calibration-methods/eye-in-hand-low-dof.md)  |
+
+## Verification Process
+
+### Error Assessment
+
+The calibration server provides an error output as an initial quality indicator:
+
+| Error Range | Interpretation   | Action Required                |
+| ----------- | ---------------- | ------------------------------ |
+| 0 - 0.01    | Acceptable       | Proceed with verification      |
+| > 0.01      | Potential issues | Review poses and image quality |
+
+<Warning>
+  If errors exceed the acceptable range, contact your Fizyr project engineer and
+  provide the calibration-dump containing both input and output data.
+</Warning>
+
+### Translation Verification
+
+1. Compare the output translation with the physical setup
+2. If discrepancies exist, review and adjust the calibration poses
+
+### Non-actuated Pick Verification
+
+To verify orientation:
+
+1. Restart both camera and command servers
+2. Trigger a pick calculation using:
+
+```bash
+LD_LIBRARY_PATH=/opt/ros/melodic/lib /opt/ros/melodic/lib/fizyr-etc
+```
+
+3. Use the review tool in the UI to examine:
+   - Latest recording
+   - Point cloud data
+   - Robot base frame axis representation
+
+### Test Pick Execution
+
+<Steps>
+  <Step title="Run Complete System">Execute the full system workflow</Step>
+  <Step title="Compare Poses">Evaluate proposed vs executed pick poses</Step>
+  <Step title="Assess Consistency">
+    Check for consistent offsets in execution
+  </Step>
+  <Step title="Review if Needed">
+    Examine calibration poses and image quality
+  </Step>
+</Steps>
+
+<Note>
+  For optimal results, maintain consistent lighting conditions and ensure the
+  calibration plate is clean and undamaged during the calibration process.
+</Note>

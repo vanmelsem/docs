@@ -14,36 +14,91 @@
 
   "favicon": "/favicon.svg",
   "navigation": {
+    "dropdowns": [
+      {
+        "dropdown": "Documentation",
+        "icon": "book-open",
+        "pages": ["quickstart", "development", "navigation"]
+      },
+      {
+        "dropdown": "API References",
+        "icon": "sqaure-terminal",
+        "pages": [
+          "api-reference/get",
+          "api-reference/post",
+          "api-reference/delete"
+        ]
+      },
+      {
+        "dropdown": "Blog",
+        "href": "https://external-link.com/blog"
+      }
+    ],
     "tabs": [
       {
         "tab": "Guides",
+        "icon": "book-open",
         "groups": [
           {
             "group": "Get Started",
+            "icon": "rocket",
             "pages": ["introduction", "library"]
           },
           {
-            "group": "Essentials",
+            "group": "Partner Resources",
+            "icon": "handshake",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "partner/index",
+              "partner/software",
+              {
+                "group": "Documentation",
+                "icon": "files",
+                "pages": [
+                  "partner/documentation",
+                  "partner/documentation/system-requirements",
+                  "partner/documentation/system-overview",
+                  "partner/documentation/camera-setup",
+                  "partner/documentation/calibration",
+                  "partner/documentation/server-configuration"
+                ]
+              },
+              {
+                "group": "API",
+                "icon": "plug",
+                "pages": [
+                  "partner/api/overview",
+                  "partner/api/rpc-protocol",
+                  "partner/api/pick-server",
+                  "partner/api/placement-verification-server",
+                  "partner/api/supervisor",
+                  {
+                    "group": "Plugins",
+                    "icon": "puzzle",
+                    "pages": [
+                      "partner/api/plugins/yaskawa",
+                      "partner/api/plugins/fanuc"
+                    ]
+                  }
+                ]
+              },
+              "partner/marketing",
+              "partner/cell-design"
             ]
           }
         ]
       },
       {
         "tab": "API Reference",
+        "icon": "code-2",
         "groups": [
           {
             "group": "API Documentation",
+            "icon": "book",
             "pages": ["api-reference/introduction"]
           },
           {
             "group": "Endpoint Examples",
+            "icon": "terminal",
             "pages": [
               "api-reference/endpoint/get",
               "api-reference/endpoint/create",
@@ -58,7 +113,7 @@
         {
           "anchor": "Documentation",
           "href": "https://docs.fizyr.com",
-          "icon": "book-open-cover"
+          "icon": "book"
         },
         {
           "anchor": "Community",
@@ -68,7 +123,7 @@
         {
           "anchor": "Blog",
           "href": "https://fizyr.com/blog",
-          "icon": "newspaper"
+          "icon": "rss"
         }
       ]
     }

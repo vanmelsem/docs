@@ -1,0 +1,215 @@
+---
+title: "Placement Verification Server"
+description: "Technical specification for the Fizyr Vision Software application protocol"
+---
+
+## Integer Types
+
+All integers are encoded as little-endian. Signed integers are encoded as two's complement.
+
+<ResponseField name="bool" type="1 byte">
+  Boolean value: `false` is encoded as `0`, `true` is encoded as `1`.
+</ResponseField>
+
+<ResponseField name="u8" type="1 byte">
+  Unsigned 8-bit integer.
+</ResponseField>
+
+<ResponseField name="u16" type="2 bytes">
+  Unsigned 16-bit integer.
+</ResponseField>
+
+<ResponseField name="u32" type="4 bytes">
+  Unsigned 32-bit integer.
+</ResponseField>
+
+<ResponseField name="u64" type="8 bytes">
+  Unsigned 64-bit integer.
+</ResponseField>
+
+<ResponseField name="i8" type="1 byte">
+  Signed 8-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i16" type="2 bytes">
+  Signed 16-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i32" type="4 bytes">
+  Signed 32-bit two's complement integer.
+</ResponseField>
+
+<ResponseField name="i64" type="8 bytes">
+  Signed 64-bit two's complement integer.
+</ResponseField>
+
+## Data Structures
+
+### List(T)
+
+Lists are encoded as the number of elements as `u32`, followed by each element.
+
+<ResponseField name="length" type="u32" required>
+  The number of elements in the list: `n`.
+</ResponseField>
+
+<ResponseField name="elements" type="T[]" required>
+  Array of `n` elements, each of size `sizeof(T)` bytes.
+</ResponseField>
+
+<Note>
+  The size of `T` may be variable itself. The size of a `List` is always 4 bytes
+  plus the sum of the size of all elements.
+</Note>
+
+### Option(T)
+
+Options are encoded as a bool that indicates if the `Option` contains a value, potentially followed by the actual value.
+
+<ResponseField name="has_value" type="bool" required>
+  Flag to indicate if the option contains a value.
+</ResponseField>
+
+<ResponseField name="value" type="T">
+  The value. Only present if `has_value` is `true`.
+</ResponseField>
+
+<Note>
+  The size of `T` may be variable itself. The size of an `Option` with a value
+  is always 1 byte plus the size of the wrapped value.
+</Note>
+
+### String
+
+Strings are encoded as the number of bytes as `u32`, followed by the raw string data.
+
+<ResponseField name="length" type="u32" required>
+  The number of bytes in the string (`n`).
+</ResponseField>
+
+<ResponseField name="bytes" type="u8[]" required>
+  Array of `n` bytes representing the string data.
+</ResponseField>
+
+## Camera State
+
+The `CameraState` enum represents the current state of the camera.
+
+<ResponseField name="Busy" type="u8 = 1">
+  The camera is busy. You should assume the camera is busy from the moment you
+  send a request until you receive a `CameraState` update, as there will always
+  be some latency before the `Busy` update arrives.
+</ResponseField>
+
+<ResponseField name="Free" type="u8 = 2">
+  The camera is free.
+</ResponseField>
+
+## Request and Response Types
+
+### CheckRegion
+
+The body of the CheckRegion request extension.
+
+<ResponseField name="min_objects" type="u32" required>
+  The minimum acceptable number of objects to be found in the provided region.
+</ResponseField>
+
+<ResponseField name="max_objects" type="u32" required>
+  The maximum acceptable number of objects to be found in the provided region.
+</ResponseField>
+
+<ResponseField name="polygon" type="List<Point2>" required>
+  The region provided as a list of points in polygon order.
+</ResponseField>
+
+### CheckResult
+
+The result of the CheckPreset operation.
+
+<ResponseField name="success" type="bool" required>
+  True if the objects detected match the preset configuration, and False
+  otherwise.
+</ResponseField>
+
+<ResponseField name="reason" type="string">
+  If `success` is False, this will give the reason for failure. If `success` is
+  True, this will be empty.
+</ResponseField>
+
+### Point2
+
+A 2D point in pixel coordinates with reference to the top left corner of the image.
+
+<ResponseField name="x" type="u32" required>
+  The x coordinate in pixel coordinates with respect to the top left corner of
+  the image.
+</ResponseField>
+
+<ResponseField name="y" type="u32" required>
+  The y coordinate in pixel coordinates with respect to the top left corner of
+  the image.
+</ResponseField>
+
+## Protocol Extensions
+
+### VerifyRequestExtension
+
+An extension to a verify request.
+
+<Note>
+  This structured enum is serialized as a 32 bit variant tag, 32 bit variant
+  size and the variant body.
+</Note>
+
+<ResponseField name="CameraUpdates" type="tag=0, size=0">
+  Request updates regarding the state of the camera.
+</ResponseField>
+
+<ResponseField name="ObjectCount" type="tag=1, size=0">
+  Request the number of objects found in the image.
+</ResponseField>
+
+<ResponseField name="CheckPreset" type="tag=2, size=4, body=u32">
+  Request that the objects in frame be compared to a preset from the
+  configuration file.
+</ResponseField>
+
+<ResponseField
+  name="RegionOfInterest"
+  type="tag=3, size=variable, body=List<Point2>"
+>
+  Request to only consider objects within a region of interest when performing
+  image analysis.
+</ResponseField>
+
+<ResponseField name="CheckRegion" type="tag=4, size=variable, body=CheckRegion">
+  Request to count the number of objects in a region and compare it to the
+  provided range.
+</ResponseField>
+
+### VerifyResponseExtension
+
+An extension to a verify response.
+
+<Note>
+  The CameraUpdates and RegionOfInterest requests do not have equivalent
+  response messages. The CameraUpdates are sent as updates, not responses. The
+  RegionOfInterest will impact the behavior of the server, but will not change
+  the response or update structure.
+</Note>
+
+<ResponseField name="ObjectCount" type="tag=1, size=4, body=u32">
+  The number of objects detected in the image (or inside the region of interest,
+  if the extension is enabled).
+</ResponseField>
+
+<ResponseField name="CheckPreset" type="tag=2, size=variable, body=CheckResult">
+  The result of CheckPreset (limited to objects in the region of interest, if
+  the extension is enabled).
+</ResponseField>
+
+<ResponseField name="CheckRegion" type="tag=4, size=variable, body=CheckResult">
+  The result of CheckRegion (limited to objects in the region of interest, if
+  the extension is enabled).
+</ResponseField>

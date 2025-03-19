@@ -1,0 +1,103 @@
+---
+title: "Pick Server"
+description: "Application Protocol for Fizyr Vision Software Pick Server"
+---
+
+## 1. Fizyr Command Server Protocol
+
+The protocol consists of a number of services exposed via the Fizyr RPC protocol. The RPC protocol allows for request/response style transactions, with intermediate update messages for each transaction. Refer to the RPC documentation for more details on that protocol.
+
+## 2. Coordinate Systems
+
+This section describes the different coordinate systems (or frames) used throughout the system. An understanding of these coordinate systems is essential as they serve as a reference for computations of images, point clouds, and poses.
+
+### 2.1. Reference Coordinate Frame
+
+The reference coordinate frame is the frame in which the camera 3D data and poses are defined. The application makes no assumptions on this frame. In general, we consider the robot base frame as the reference coordinate frame.
+
+### 2.2. 2D Camera Frame
+
+The origin of the 2D camera frame is the top-left corner of the image:
+
+- Positive `x` is pointing right
+- Positive `y` is pointing down
+
+## 3. Services
+
+This section describes the available services. See below for a quick overview of each service.
+
+<CodeGroup>
+  ```markdown Service Overview | Name | ID | Description | | --- | --- | --- | |
+  ping | 0 | Ping the server to see if communication with the server is still
+  working. | | record-compute-pick | 1 | Triggers the 3D camera to record an
+  image, which is processed by Fizyr software to find objects with pick poses. |
+  | record-compute-pick-roi | 4 | Triggers the 3D camera to record an image with
+  ROI processing to find objects with pick poses. | ```
+</CodeGroup>
+
+### 3.1. Service `ping` (ID: 0)
+
+May be sent by: client
+
+Ping the server to see if communication with the server is still working. The server will reply as fast as possible with a response. The client can choose the interval at which to ping the server freely, depending on the application needs.
+
+There are no update messages for the `ping` service.
+
+<CodeGroup>
+```markdown Request Body
+| Field | Type | Size | Description |
+| --- | --- | --- | --- |
+| This body is empty | | | |
+| **Total size:** 0 bytes | | | |
+```
+
+```markdown Response Body
+| Field                   | Type | Size | Description |
+| ----------------------- | ---- | ---- | ----------- |
+| This body is empty      |      |      |             |
+| **Total size:** 0 bytes |      |      |             |
+```
+
+</CodeGroup>
+
+### 3.2. Service `record-compute-pick` (ID: 1)
+
+May be sent by: client
+
+This service triggers the attached 3D camera to record an image, which is then processed by the Fizyr software to find objects with pick poses.
+
+<CodeGroup>
+  ```markdown Available Extensions | ID | Description | Data | Size | Data
+  Description | | --- | --- | --- | --- | --- | | 8000 | SelectContainer | u32 |
+  4 | ID of the container to be used; must match configuration file | | 8001 |
+  VerifyContainerLayout | empty | 0 | Verify detected container layout against
+  configuration | | 8002 | SimulatedWallsLayout | List(u32) | variable | IDs of
+  simulated walls for collision check | | 8003 | TagRequest | List(RequestTag) |
+  variable | Tag the request with multiple tags | | 8004 | SelectRoiVolumes |
+  u32 | 4 | Select RoiVolumes set for 3D region check | | 8005 |
+  SendObjectsCount | empty | 0 | Request count of objects in ROI | | 8006 |
+  SelectContainerDetectionRoi | u32 | 4 | Select ROI for container detection
+  filtering | ```
+</CodeGroup>
+
+The detections can be sent to the client in three different ways:
+
+- As soon as each one is computed with a `detection` update
+- When all are computed with a `detections` update
+- In the response
+
+<Note>
+  Sending `pose_feedback` is highly recommended as it: - Helps analyze root
+  causes of failed picks - Facilitates data transfer (transfer only failures) -
+  Enables selective logging in production
+</Note>
+
+#### Request/Response Bodies
+
+<CodeGroup>
+```markdown Request Body
+| Field | Type | Size | Description |
+| --- | --- | --- | --- |
+| This body is empty | | | |
+| **Total size:** 0 bytes | | | |
+```
