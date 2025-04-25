@@ -22,7 +22,7 @@
           {
             "group": "Get Started",
             "icon": "rocket",
-            "pages": ["introduction", "library"]
+            "pages": ["introduction", "library", "test"]
           },
           {
             "group": "Partner Resources",
